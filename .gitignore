@@ -1,0 +1,19 @@
+# Ambiente virtual Python
+.venv/
+venv/
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# Segredos / configuração local (nunca versionar)
+.env
+
+# Memória do orquestrador — dados pessoais/sessão, não é código
+data/memory/
+
+# Estado interno do Cline (Focus Chain, etc.) — não é parte do projeto
+.cline/
+
+# Editor
+.vscode/
