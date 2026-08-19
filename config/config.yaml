@@ -1,0 +1,11 @@
+model:
+  name: dnai-orchestrator
+
+mcp_servers:
+  - name: git
+    command: uvx
+    args:
+      - mcp-server-git
+      - --repository
+      - "."
+    transport: stdio
