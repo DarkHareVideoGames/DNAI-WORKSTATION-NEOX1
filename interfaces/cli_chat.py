@@ -15,6 +15,7 @@ from core.orchestrator import run
 # code page do terminal — o mesmo cuidado de encoding já documentado no
 # projeto para o PowerShell.
 
+
 _TITLE = r"""
  ____  _   _    _    ___
 |  _ \| \ | |  / \  |_ _|
@@ -35,12 +36,17 @@ def _print_banner() -> None:
 
 def main():
     _print_banner()
+    # Histórico da conversa, mantido em memória durante esta sessão do chat.
+    # run() devolve o histórico atualizado a cada turno; guardamo-lo aqui e
+    # passamo-lo de volta na chamada seguinte para o modelo ter contexto das
+    # perguntas anteriores.
+    historico = []
     while True:
         try:
             mensagem = input("Tu: ")
             if mensagem.lower() in ["sair", "exit", "quit"]:
                 break
-            resposta = run(mensagem)
+            resposta, historico = run(mensagem, historico)
             print(f"DNAI: {resposta}")
         except KeyboardInterrupt:
             print("\nSaindo do chat.")
