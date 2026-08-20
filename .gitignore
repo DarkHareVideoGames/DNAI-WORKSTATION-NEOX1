@@ -13,7 +13,7 @@ __pycache__/
 data/memory/
 
 # Estado interno do Cline (Focus Chain, etc.) — não é parte do projeto
-.cline/
+.clinerules/
 
 # Editor
 .vscode/

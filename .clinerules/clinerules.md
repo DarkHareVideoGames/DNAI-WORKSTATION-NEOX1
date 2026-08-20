@@ -1,9 +1,10 @@
 # Contexto
 Orquestrador de IA local: loop LLM (planear → escolher ferramenta MCP → 
-chamar → verificar → repetir), 100% local via Ollama.
+chamar → verificar → repetir)
 Hardware: RTX 4080 Super 16GB / Ryzen 7 7800X3D / 64GB RAM.
 Modelos disponíveis: Devstral Small 24B (qualidade), Qwen Coder 14B / 
 gpt-oss-20b (rapidez).
+Pode pesquisar online por manuais e soluções
 
 # Regras
 - É tudo em português
