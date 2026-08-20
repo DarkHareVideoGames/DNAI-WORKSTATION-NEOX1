@@ -1,5 +1,5 @@
-FROM devstral-small-2:24b-instruct-2512-q4_K_M
-PARAMETER num_ctx 16384
+FROM qwen2.5-coder:14b
+PARAMETER num_ctx 65536
 
 SYSTEM """
 Reasoning: high
