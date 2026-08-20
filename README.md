@@ -1,6 +1,6 @@
 # DNAI WORKSTATION NEO X1
-## Assets
-- **assets/neox1-logo.png**: Logotipo do projeto.
+![NEOX1 Logo](assets/neox1-logo.png)
+
 
 ## Visão Geral
 Este projeto é um orquestrador de IA projetado para gerir e coordenar modelos de IA e tarefas localmente. A funcionalidade principal está implementada em Python, e a configuração é gerida através de ficheiros YAML.
