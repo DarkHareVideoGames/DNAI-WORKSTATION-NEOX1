@@ -6,6 +6,7 @@ Modelos disponíveis: Devstral Small 24B (qualidade), Qwen Coder 14B /
 gpt-oss-20b (rapidez).
 
 # Regras
+- É tudo em português
 - Não usar frameworks de agentes (LangGraph, AutoGen, CrewAI) — núcleo 
   construído de raiz para comportamento previsível e fácil de depurar.
 - Python 3.11+, tipagem explícita, dependências mínimas.
