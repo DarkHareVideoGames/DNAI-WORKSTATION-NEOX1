@@ -1,38 +1,75 @@
 # DNAI WORKSTATION NEO X1
-![NEOX1 Logo](assets/neox1-logo.png)
 
+## Resumo
+Orquestrador de IA local utilizando loop LLM (planear → escolher ferramenta MCP → chamar → verificar → repetir).
 
-## Visão Geral
-Este projeto é um orquestrador de IA projetado para gerir e coordenar modelos de IA e tarefas localmente. A funcionalidade principal está implementada em Python, e a configuração é gerida através de ficheiros YAML.
+## Estrutura do Projeto
+- `.clinerules/`
+  - `clinerules.md`: Diretrizes e regras para o projeto.
+- `config/`
+  - `config.yaml`: Configurações principais do projeto.
+  - `Modelfile`: Definições de modelos.
+- `core/`
+  - `orchestrator.py`: Módulo principal de orquestração.
+- `interfaces/`
+  - `cli_chat.py`: Interface de chat CLI.
+- `assets/`
+  - `neox1-logo.png`: Logotipo.
+  - `neox1-logo.svg`: Logotipo.
+- `run.bat`: Script de execução.
+- `test_smoke.py`: Testes de integração.
+## Resumo
+Orquestrador de IA local utilizando loop LLM (planear → escolher ferramenta MCP → chamar → verificar → repetir).
 
-## Componentes Principais
-- **core/orchestrator.py**: O script principal do orquestrador responsável por gerir modelos de IA e tarefas.
-- **config/config.yaml**: Ficheiro de configuração para o orquestrador, incluindo caminhos de modelos e definições.
-- **test_smoke.py**: Um ficheiro de teste de fumaça para verificar a funcionalidade básica do orquestrador.
+## Resumo
+Orquestrador de IA local utilizando loop LLM (planear → escolher ferramenta MCP → chamar → verificar → repetir).
 
-## Instalação
+## Funcionalidade
+O projeto inclui um interface de chat CLI (`interfaces/cli_chat.py`) que permite interagir com a IA local. O utilizador pode enviar mensagens que são processadas pelo módulo `core/orchestrator.py` e a IA responde.
+
+## Requisitos
+- Python 3.11+
+- Tipagem explícita
+- Dependências mínimas
+
+## Instruções de Uso
 1. Clone o repositório:
    ```bash
    git clone https://github.com/DarkHareVideoGames/DNAI-WORKSTATION-NEOX1.git
    ```
 
-2. Navegue para o diretório do projeto:
+2. Navegue até o diretório do projeto:
    ```bash
    cd DNAI-WORKSTATION-NEOX1
    ```
 
-3. Instale as dependências:
+3. Crie um ambiente virtual e ative-o:
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\activate
+   ```
+
+4. Instale as dependências:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Execute o orquestrador:
+5. Execute o projeto:
    ```bash
-   python core/orchestrator.py
+   python run.bat
    ```
 
-## Contribuição
-Contribuições são bem-vindas! Por favor, siga estas diretrizes:
-- Certifique-se de que as suas alterações são testadas.
-- Atualize o README.md se necessário.
-- Abra um pedido de pull com uma descrição clara das suas alterações.
+## Contribuições
+Contribuições são bem-vindas. Por favor, forneça pull requests para adicionar novas funcionalidades, corrigir bugs ou melhorar a documentação.
+
+## Licença
+Este projeto está licenciado sob a Licença MIT.
+## Requisitos
+- Python 3.11+
+- Tipagem explícita
+- Dependências mínimas
+
+## Instruções de Uso
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/DarkHareVideoGames/DNAI-WORKSTATION-NEOX1.git
