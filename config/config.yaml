@@ -7,5 +7,4 @@ mcp_servers:
     args:
       - mcp-server-git
       - --repository
-      - "."
-    transport: stdio
+      - .
