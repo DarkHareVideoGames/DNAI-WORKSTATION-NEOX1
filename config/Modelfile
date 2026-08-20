@@ -2,7 +2,7 @@ FROM gpt-oss:20b
 
 # Contexto maior que o padrão do Ollama (4096) — necessário para 
 # histórico + schemas de ferramentas MCP num loop agente
-PARAMETER num_ctx 32768
+PARAMETER num_ctx 65536
 
 SYSTEM """
 Reasoning: high
