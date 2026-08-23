@@ -2,8 +2,9 @@
 Núcleo orquestrador — Milestone 1 (+ memória entre turnos).
 
 Liga-se a um servidor MCP via stdio, descobre as ferramentas disponíveis,
-chama o modelo local via Ollama com essas ferramentas, executa as tool
-calls pedidas pelo modelo e devolve a resposta final com dados reais.
+chama o modelo local (via LM Studio, servidor OpenAI-compatible) com essas
+ferramentas, executa as tool calls pedidas pelo modelo e devolve a resposta
+final com dados reais.
 
 Memória: `run()` recebe e devolve o histórico da conversa (lista de
 mensagens), em vez de manter estado escondido. Quem chama (ex.: cli_chat.py)
@@ -13,14 +14,15 @@ mantém contexto entre turnos.
 """
 
 import asyncio
+import json
 import os
 from typing import Any
 
-import ollama
 import yaml
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.types import Tool
+from openai import OpenAI
 
 # Raiz do projeto = pasta pai deste ficheiro (core/), calculada a partir do
 # caminho absoluto do próprio módulo — o mesmo truque já usado no
@@ -38,8 +40,8 @@ _CONFIG_PATH = os.path.join(_PROJECT_ROOT, "config", "config.yaml")
 DEFAULT_MAX_HISTORY_MESSAGES = 20
 
 
-def _mcp_tool_to_ollama_tool(tool: Tool) -> dict[str, Any]:
-    """Converte a definição de uma ferramenta MCP no formato de function-calling do Ollama."""
+def _mcp_tool_to_local_model_tool(tool: Tool) -> dict[str, Any]:
+    """Converte a definição de uma ferramenta MCP no formato de function-calling OpenAI-compatible."""
     return {
         "type": "function",
         "function": {
@@ -69,11 +71,17 @@ async def _run_async(
     with open(_CONFIG_PATH, "r") as f:
         config = yaml.safe_load(f)
 
+    # Configurações de API para LM Studio (servidor OpenAI-compatible)
+    base_url = config["api"]["base_url"]
+    api_key = config["api"]["api_key"]
+
     model_name = config["model"]["name"]
     server_cfg = config["mcp_servers"][0]
     max_history = config.get("memory", {}).get(
         "max_history_messages", DEFAULT_MAX_HISTORY_MESSAGES
     )
+
+    client = OpenAI(base_url=base_url, api_key=api_key)
 
     server_params = StdioServerParameters(
         command=server_cfg["command"],
@@ -90,15 +98,20 @@ async def _run_async(
             await session.initialize()  # handshake MCP obrigatório
 
             tools_result = await session.list_tools()
-            ollama_tools = [_mcp_tool_to_ollama_tool(t) for t in tools_result.tools]
+            local_model_tools = [_mcp_tool_to_local_model_tool(t) for t in tools_result.tools]
             tools_by_name = {t.name: t for t in tools_result.tools}
 
             messages = _trim_history(history, max_history)
             messages.append({"role": "user", "content": user_message})
 
-            response = ollama.chat(model=model_name, messages=messages, tools=ollama_tools)
-            assistant_message = response.message
-            messages.append(assistant_message.model_dump(exclude_none=True))
+            response = client.chat.completions.create(
+                model=model_name, messages=messages, tools=local_model_tools
+            )
+            assistant_message = response.choices[0].message
+            # Adiciona a mensagem do assistente, mantendo tool_calls se existirem
+            msg = assistant_message.model_dump(exclude_none=True)
+            msg["role"] = "assistant"
+            messages.append(msg)
 
             if not assistant_message.tool_calls:
                 return assistant_message.content or "", messages
@@ -106,26 +119,41 @@ async def _run_async(
             # Executa cada tool call pedida pelo modelo através da sessão MCP real
             for call in assistant_message.tool_calls:
                 tool_name = call.function.name
-                tool_args = call.function.arguments or {}
+                # No formato OpenAI, os argumentos vêm como uma string JSON,
+                # não como dict — é preciso descodificar antes de passar ao MCP.
+                try:
+                    tool_args = json.loads(call.function.arguments or "{}")
+                except json.JSONDecodeError:
+                    tool_args = {}
+                tool_output = ""  # Inicializa a saída da ferramenta
 
                 if tool_name not in tools_by_name:
-                    tool_output = f"Erro: ferramenta '{tool_name}' não existe neste servidor MCP."
+                    tool_output = f"ERRO DE CONFIGURAÇÃO: Ferramenta '{tool_name}' solicitada, mas não foi encontrada no servidor MCP."
                 else:
-                    result = await session.call_tool(tool_name, tool_args)
-                    tool_output = "\n".join(
-                        block.text for block in result.content if hasattr(block, "text")
-                    )
-                    if result.isError:
-                        tool_output = f"Erro ao executar '{tool_name}': {tool_output}"
+                    try:
+                        result = await session.call_tool(tool_name, tool_args)
+                        if result.isError:
+                            error_details = "\n".join(block.text for block in result.content if hasattr(block, "text"))
+                            tool_output = f"ERRO NA EXECUÇÃO DE '{tool_name}': {error_details}"
+                        else:
+                            tool_output = "\n".join(block.text for block in result.content if hasattr(block, "text"))
 
+                    except Exception as e:
+                        # Captura erros de comunicação ou protocolo MCP
+                        tool_output = f"ERRO CRÍTICO DE COMUNICAÇÃO MCP ao chamar '{tool_name}': {type(e).__name__}: {str(e)}"
+
+                # O formato OpenAI exige tool_call_id a associar a resposta à
+                # tool_call pedida (em vez de "tool_name", que o Ollama aceitava).
                 messages.append(
-                    {"role": "tool", "tool_name": tool_name, "content": tool_output}
+                    {"role": "tool", "tool_call_id": call.id, "content": tool_output}
                 )
 
             # Segunda chamada: dá ao modelo o resultado real da ferramenta para
             # produzir a resposta final em linguagem natural ("verificar resultado").
-            final_response = ollama.chat(model=model_name, messages=messages, tools=ollama_tools)
-            final_message = final_response.message
+            final_response = client.chat.completions.create(
+                model=model_name, messages=messages, tools=local_model_tools
+            )
+            final_message = final_response.choices[0].message
             messages.append(final_message.model_dump(exclude_none=True))
 
             return final_message.content or "", messages
@@ -144,4 +172,7 @@ def run(
     try:
         return asyncio.run(_run_async(user_message, history))
     except Exception as e:
-        return f"Error: {str(e)}", history
+        # Captura erros gerais de execução do run() (ex: falha ao iniciar o evento)
+        import traceback
+        traceback.print_exc()
+        return f"ERRO FATAL DE EXECUÇÃO DO ORQUESTRADOR: {type(e).__name__}: {str(e)}", history

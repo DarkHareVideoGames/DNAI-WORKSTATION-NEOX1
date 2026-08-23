@@ -1,5 +1,9 @@
 model:
-  name: dnai-orchestrator
+  name: google/gemma-4-e4b
+
+api:
+  base_url: "http://localhost:1234/v1"
+  api_key: "lm-studio"
 
 mcp_servers:
   - name: git
