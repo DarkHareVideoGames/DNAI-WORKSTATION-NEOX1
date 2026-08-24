@@ -81,6 +81,12 @@ async def _run_async(
         "max_history_messages", DEFAULT_MAX_HISTORY_MESSAGES
     )
 
+    # Identidade do agente (secção persona do config.yaml). Injetada como
+    # system prompt a cada chamada, mas NÃO guardada no histórico devolvido:
+    # assim o histórico mantém-se limpo (só user/assistant/tool) e a
+    # identidade nunca se perde, mesmo com a truncagem das mensagens antigas.
+    system_prompt = (config.get("persona") or {}).get("system_prompt")
+
     client = OpenAI(base_url=base_url, api_key=api_key)
 
     server_params = StdioServerParameters(
@@ -102,6 +108,8 @@ async def _run_async(
             tools_by_name = {t.name: t for t in tools_result.tools}
 
             messages = _trim_history(history, max_history)
+            if system_prompt:
+                messages.insert(0, {"role": "system", "content": system_prompt})
             messages.append({"role": "user", "content": user_message})
 
             response = client.chat.completions.create(
