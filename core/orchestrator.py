@@ -66,7 +66,9 @@ def _trim_history(history: list[dict[str, Any]], max_messages: int) -> list[dict
 
 
 async def _run_async(
-    user_message: str, history: list[dict[str, Any]]
+    user_message: str,
+    history: list[dict[str, Any]],
+    regras_projeto: str | None = None,
 ) -> tuple[str, list[dict[str, Any]]]:
     with open(_CONFIG_PATH, "r") as f:
         config = yaml.safe_load(f)
@@ -90,6 +92,15 @@ async def _run_async(
     # assim o histórico mantém-se limpo (só user/assistant/tool) e a
     # identidade nunca se perde, mesmo com a truncagem das mensagens antigas.
     system_prompt = (config.get("persona") or {}).get("system_prompt")
+
+    # Regras específicas do projeto (core/projects.py) juntam-se à persona
+    # base numa única mensagem de sistema.
+    if regras_projeto:
+        system_prompt = (
+            (system_prompt + "\n\n" + regras_projeto)
+            if system_prompt
+            else regras_projeto
+        )
 
     client = OpenAI(base_url=base_url, api_key=api_key)
 
@@ -182,17 +193,21 @@ async def _run_async(
 
 
 def run(
-    user_message: str, history: list[dict[str, Any]] | None = None
+    user_message: str,
+    history: list[dict[str, Any]] | None = None,
+    regras_projeto: str | None = None,
 ) -> tuple[str, list[dict[str, Any]]]:
     """Ponto de entrada síncrono usado por test_smoke.py e pelas interfaces.
 
     `history`: mensagens da conversa até agora (None/[] no primeiro turno).
+    `regras_projeto`: regras específicas do projeto (opcional), injetadas
+    com a persona base como system prompt.
     Devolve (resposta, historico_atualizado) — guarda o histórico devolvido
     e passa-o na chamada seguinte para manter contexto entre turnos.
     """
     history = history or []
     try:
-        return asyncio.run(_run_async(user_message, history))
+        return asyncio.run(_run_async(user_message, history, regras_projeto))
     except Exception as e:
         # Captura erros gerais de execução do run() (ex: falha ao iniciar o evento)
         import traceback

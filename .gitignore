@@ -9,14 +9,17 @@ __pycache__/
 # Segredos / configuração local (nunca versionar)
 .env
 
-# Memória do orquestrador — dados pessoais/sessão, não é código
-data/memory/
+# Dados do utilizador (BD de conversas, projetos, uploads) — não é código
+data/
 
 # Estado interno do Cline (Focus Chain, etc.) — não é parte do projeto
 .clinerules/
 
 # Diagnóstico local de ligação — utilitário da máquina, não versionado
 test_smoke.py
+
+# Roteiro de continuidade entre sessões — local, não versionado
+docs/ROADMAP.md
 
 # Editor
 .vscode/
