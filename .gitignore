@@ -15,5 +15,8 @@ data/memory/
 # Estado interno do Cline (Focus Chain, etc.) — não é parte do projeto
 .clinerules/
 
+# Diagnóstico local de ligação — utilitário da máquina, não versionado
+test_smoke.py
+
 # Editor
 .vscode/
