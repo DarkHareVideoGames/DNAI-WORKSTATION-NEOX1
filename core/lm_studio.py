@@ -103,44 +103,51 @@ def garantir_servidor_ativo() -> str | None:
     timeout_s = int(cfg.get("startup_timeout_seconds", DEFAULT_STARTUP_TIMEOUT))
     load_model = cfg.get("load_model_on_start", DEFAULT_LOAD_MODEL)
 
-    # Caso 1: já está ativo — nada a fazer (comportamento anterior preservado).
-    if _servidor_responde(base_url):
-        return None
+    # Passo 1: garantir que o SERVIDOR responde.
+    if not _servidor_responde(base_url):
+        if not auto_start:
+            return (
+                "AVISO: o LM Studio não responde em "
+                f"{base_url} e o arranque automático está desligado "
+                "(lm_studio.auto_start: false). Inicie-o manualmente."
+            )
 
-    if not auto_start:
-        return (
-            "AVISO: o LM Studio não responde em "
-            f"{base_url} e o arranque automático está desligado "
-            "(lm_studio.auto_start: false). Inicie-o manualmente."
-        )
+        print("LM Studio não está ativo — a iniciar automaticamente...")
 
-    print("LM Studio não está ativo — a iniciar automaticamente...")
+        ok, erro = _correr_lms(["server", "start"])
+        if not ok:
+            return erro
 
-    ok, erro = _correr_lms(["server", "start"])
-    if not ok:
-        return erro
+        # Polling até o endpoint /models responder ou esgotar o timeout.
+        print(f"A aguardar o servidor responder (timeout: {timeout_s}s)...")
+        inicio = time.monotonic()
+        while time.monotonic() - inicio < timeout_s:
+            if _servidor_responde(base_url):
+                break
+            time.sleep(1)
+        else:
+            return (
+                f"ERRO: o LM Studio não respondeu em {base_url} após {timeout_s}s.\n"
+                "       Verifique se o servidor está configurado na aplicação\n"
+                "       LM Studio (Developer > Start Server) e se a porta coincide\n"
+                "       com api.base_url."
+            )
 
-    if load_model:
-        print(f"A carregar o modelo '{modelo}'...")
+    # Passo 2: garantir que o MODELO configurado está carregado (o servidor
+    # pode estar ativo com o modelo descarregado pelo utilizador na GUI).
+    if load_model and modelo not in modelos_disponiveis(base_url):
+        print(f"Modelo '{modelo}' não está carregado — a carregar...")
         ok, erro = _correr_lms(["load", modelo, "-y"])
         if not ok:
-            # O servidor pode estar ativo mesmo que o load falhe (ex.: modelo
-            # já carregado ou nome diferente) — continuamos para o health check.
             print(erro)
+        if modelo not in modelos_disponiveis(base_url):
+            return (
+                f"AVISO: o modelo '{modelo}' não consta nos modelos disponíveis.\n"
+                "       Confirme o nome exato em model.name (config.yaml) contra a\n"
+                "       lista do LM Studio."
+            )
 
-    # Polling até o endpoint /models responder ou esgotar o timeout.
-    print(f"A aguardar o servidor responder (timeout: {timeout_s}s)...")
-    inicio = time.monotonic()
-    while time.monotonic() - inicio < timeout_s:
-        if _servidor_responde(base_url):
-            return None
-        time.sleep(1)
-
-    return (
-        f"ERRO: o LM Studio não respondeu em {base_url} após {timeout_s}s.\n"
-        "       Verifique se o servidor está configurado na aplicação LM Studio\n"
-        "       (Developer > Start Server) e se a porta coincide com api.base_url."
-    )
+    return None
 
 
 def modelos_disponiveis(base_url: str) -> list[str]:
