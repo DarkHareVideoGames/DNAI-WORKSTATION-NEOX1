@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DNAI WORKSTATION NEO X1</title>
+<link rel="icon" href="/assets/neox1-logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- Splash de arranque: logotipo animado enquanto o backend prepara tudo -->
+<div id="splash">
+  <img src="/assets/neox1-logo.svg" alt="NEO X1" class="splash-logo">
+  <div class="splash-titulo">DNAI WORKSTATION NEO X1</div>
+  <div class="splash-estado" id="splash-estado">A iniciar o sistema...</div>
+</div>
+
+<div id="app" class="oculto">
+
+  <!-- ===================== TOPBAR ===================== -->
+  <header id="topbar">
+    <div class="topbar-esq">
+      <button id="btn-terminal" class="btn-topbar" title="Mostrar/esconder terminal">TERMINAL</button>
+      <span id="estado-lmstudio" class="estado" title="Estado do servidor local">
+        <span class="ponto cinza" id="ponto-lmstudio"></span>
+        <span id="rotulo-servidor">Servidor</span>
+      </span>
+      <span id="estado-agente" class="estado" title="Agente carregado">
+        <span id="rotulo-agente">AGENTE</span>: <strong id="nome-agente">NEO X1</strong>
+      </span>
+    </div>
+    <div class="topbar-centro">
+      <img src="/assets/neox1-logo.svg" alt="NEO X1" class="topbar-logo">
+    </div>
+    <div class="topbar-dir">
+      <button id="btn-abrir-pasta" class="btn-topbar" title="Abrir pasta de ficheiros do projeto">ABRIR PASTA</button>
+      <div class="dropdown">
+        <button id="btn-ficheiros" class="btn-topbar">FICHEIROS &#9662;</button>
+        <div id="menu-ficheiros" class="dropdown-menu oculto">
+          <div id="lista-ficheiros" class="lista-ficheiros">Sem ficheiros.</div>
+          <label class="item-upload">
+            + Carregar ficheiro
+            <input type="file" id="input-upload" hidden>
+          </label>
+        </div>
+      </div>
+      <button id="btn-definicoes" class="btn-topbar" title="Definições (em breve)">DEFINIÇÕES</button>
+    </div>
+  </header>
+
+  <div id="corpo">
+
+    <!-- ===================== BARRA LATERAL ===================== -->
+    <aside id="lateral">
+      <div class="lateral-secao">
+        <div class="lateral-titulo">PROJETOS
+          <button id="btn-novo-projeto" class="btn-mini" title="Novo projeto">+</button>
+        </div>
+        <ul id="lista-projetos" class="lista"></ul>
+      </div>
+      <div class="lateral-secao">
+        <div class="lateral-titulo">CONVERSAS
+          <button id="btn-nova-conversa" class="btn-mini" title="Nova conversa">+</button>
+        </div>
+        <ul id="lista-conversas" class="lista"></ul>
+      </div>
+    </aside>
+
+    <!-- ===================== CHAT ===================== -->
+    <main id="chat">
+      <div id="mensagens">
+        <div class="vazia" id="chat-vazio">
+          <img src="/assets/neox1-logo.svg" alt="" class="vazio-logo">
+          <p>Escolha ou crie uma conversa para começar.</p>
+        </div>
+      </div>
+      <form id="form-chat">
+        <input type="text" id="entrada" placeholder="Escreva a sua mensagem..." autocomplete="off" disabled>
+        <button type="submit" id="btn-enviar" disabled>ENVIAR</button>
+      </form>
+    </main>
+
+    <!-- ===================== TERMINAL ===================== -->
+    <section id="terminal" class="oculto">
+      <div class="terminal-titulo">
+        <img src="/assets/neox1-logo.svg" alt="" class="terminal-logo">
+        <span>TERMINAL — registos do sistema</span>
+      </div>
+      <pre id="terminal-saida"></pre>
+    </section>
+
+  </div>
+</div>
+
+<!-- Modal: novo projeto -->
+<div id="modal-projeto" class="modal oculto">
+  <div class="modal-caixa">
+    <h3>Novo projeto</h3>
+    <label>Nome<br><input type="text" id="proj-nome"></label>
+    <label>Descrição<br><input type="text" id="proj-descricao"></label>
+    <label>Nome do agente (opcional)<br><input type="text" id="proj-agente" placeholder="NEO X1"></label>
+    <label>Regras específicas (system prompt extra)<br>
+      <textarea id="proj-regras" rows="4"></textarea>
+    </label>
+    <div class="modal-botoes">
+      <button type="button" id="proj-cancelar" class="btn-topbar">CANCELAR</button>
+      <button type="button" id="proj-criar" class="btn-topbar destaque">CRIAR</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

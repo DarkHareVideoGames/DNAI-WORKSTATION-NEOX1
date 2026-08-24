@@ -22,6 +22,15 @@ api:
   base_url: "http://localhost:1234/v1"
   api_key: "lm-studio"
 
+# Interface web local (Milestone 3). Apenas acessível em localhost.
+interface:
+  host: 127.0.0.1
+  porta: 8765
+  # Rótulos visíveis na interface — edite à vontade, sem tocar no código.
+  rotulos:
+    servidor: "Servidor"
+    agente: "AGENTE"
+
 # Arranque automático do servidor LM Studio quando a interface abre.
 # Requer o CLI 'lms' no PATH (instalado por defeito com versões recentes
 # do LM Studio). Se auto_start for false, apenas avisa sem arrancar.
