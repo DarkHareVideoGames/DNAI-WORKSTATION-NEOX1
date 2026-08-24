@@ -5,6 +5,14 @@ api:
   base_url: "http://localhost:1234/v1"
   api_key: "lm-studio"
 
+# Arranque automático do servidor LM Studio quando a interface abre.
+# Requer o CLI 'lms' no PATH (instalado por defeito com versões recentes
+# do LM Studio). Se auto_start for false, apenas avisa sem arrancar.
+lm_studio:
+  auto_start: true
+  startup_timeout_seconds: 60
+  load_model_on_start: true
+
 mcp_servers:
   - name: git
     command: uvx

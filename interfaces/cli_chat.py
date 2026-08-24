@@ -9,6 +9,7 @@ import sys
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
 
+from core.lm_studio import garantir_servidor_ativo
 from core.orchestrator import run
 
 # Usa apenas caracteres ASCII puros (sem blocos Unicode) para não depender da
@@ -36,6 +37,12 @@ def _print_banner() -> None:
 
 def main():
     _print_banner()
+    # Garante que o LM Studio está acessível antes de aceitar a primeira
+    # mensagem: se o servidor não estiver ativo, tenta arrancá-lo e carregar
+    # o modelo automaticamente (ver core/lm_studio.py e config.yaml).
+    aviso = garantir_servidor_ativo()
+    if aviso:
+        print(aviso)
     # Histórico da conversa, mantido em memória durante esta sessão do chat.
     # run() devolve o histórico atualizado a cada turno; guardamo-lo aqui e
     # passamo-lo de volta na chamada seguinte para o modelo ter contexto das
