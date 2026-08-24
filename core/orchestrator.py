@@ -76,6 +76,10 @@ async def _run_async(
     api_key = config["api"]["api_key"]
 
     model_name = config["model"]["name"]
+    # Temperatura opcional (model.temperature no config.yaml). Valores baixos
+    # (ex.: 0.3) tornam o modelo mais deterministico — importante para a
+    # memoria entre turnos em modelos locais pequenos.
+    temperatura = config.get("model", {}).get("temperature")
     server_cfg = config["mcp_servers"][0]
     max_history = config.get("memory", {}).get(
         "max_history_messages", DEFAULT_MAX_HISTORY_MESSAGES
@@ -112,8 +116,12 @@ async def _run_async(
                 messages.insert(0, {"role": "system", "content": system_prompt})
             messages.append({"role": "user", "content": user_message})
 
+            kwargs_extra: dict[str, Any] = (
+                {"temperature": temperatura} if temperatura is not None else {}
+            )
             response = client.chat.completions.create(
-                model=model_name, messages=messages, tools=local_model_tools
+                model=model_name, messages=messages, tools=local_model_tools,
+                **kwargs_extra,
             )
             assistant_message = response.choices[0].message
             # Adiciona a mensagem do assistente, mantendo tool_calls se existirem
@@ -122,7 +130,11 @@ async def _run_async(
             messages.append(msg)
 
             if not assistant_message.tool_calls:
-                return assistant_message.content or "", messages
+                # Remove a system prompt do historico devolvido: ela e
+                # reinjetada no inicio de cada chamada; se ficasse aqui,
+                # acumular-se-ia duplicada a cada turno e confundiria o modelo.
+                historico_limpo = [m for m in messages if m.get("role") != "system"]
+                return assistant_message.content or "", historico_limpo
 
             # Executa cada tool call pedida pelo modelo através da sessão MCP real
             for call in assistant_message.tool_calls:
@@ -159,12 +171,14 @@ async def _run_async(
             # Segunda chamada: dá ao modelo o resultado real da ferramenta para
             # produzir a resposta final em linguagem natural ("verificar resultado").
             final_response = client.chat.completions.create(
-                model=model_name, messages=messages, tools=local_model_tools
+                model=model_name, messages=messages, tools=local_model_tools,
+                **kwargs_extra,
             )
             final_message = final_response.choices[0].message
             messages.append(final_message.model_dump(exclude_none=True))
 
-            return final_message.content or "", messages
+            historico_limpo = [m for m in messages if m.get("role") != "system"]
+            return final_message.content or "", historico_limpo
 
 
 def run(

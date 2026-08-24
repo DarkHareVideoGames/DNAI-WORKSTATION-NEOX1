@@ -1,5 +1,9 @@
 model:
   name: google/gemma-4-e4b
+  # Temperatura baixa = respostas mais deterministicas (melhor memoria
+  # entre turnos em modelos locais pequenos). Remova a linha para usar
+  # o valor por omissao do LM Studio.
+  temperature: 0.3
 
 # Identidade do agente, injetada como system prompt em todas as chamadas.
 persona:
