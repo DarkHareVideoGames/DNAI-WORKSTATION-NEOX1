@@ -18,6 +18,10 @@ data/
 # Diagnóstico local de ligação — utilitário da máquina, não versionado
 test_smoke.py
 
+# Scripts de teste/demo locais (na raiz do projeto)
+test_*.py
+demo_*.py
+
 # Roteiro de continuidade entre sessões — local, não versionado
 docs/ROADMAP.md
 

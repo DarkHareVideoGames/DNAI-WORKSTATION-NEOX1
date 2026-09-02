@@ -49,6 +49,11 @@
     </div>
   </header>
 
+  <!-- ===================== ABAS DE AGENTES ===================== -->
+  <div id="abas-agentes" class="abas-container">
+    <div id="abas-lista" class="abas-lista"></div>
+  </div>
+
   <div id="corpo">
 
     <!-- ===================== BARRA LATERAL ===================== -->
@@ -79,6 +84,13 @@
         <input type="text" id="entrada" placeholder="Escreva a sua mensagem..." autocomplete="off" disabled>
         <button type="submit" id="btn-enviar" disabled>ENVIAR</button>
       </form>
+      <div id="pipeline-opcoes" class="pipeline-opcoes">
+        <label>
+          <input type="checkbox" id="auto-pipeline">
+          Auto-pipeline (Story -> Storyboard -> Video)
+        </label>
+        <button type="button" id="btn-passar-proximo" class="btn-pipeline">Passar ao próximo agente</button>
+      </div>
     </main>
 
     <!-- ===================== TERMINAL ===================== -->
@@ -106,6 +118,30 @@
     <div class="modal-botoes">
       <button type="button" id="proj-cancelar" class="btn-topbar">CANCELAR</button>
       <button type="button" id="proj-criar" class="btn-topbar destaque">CRIAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: definicoes -->
+<div id="modal-definicoes" class="modal oculto">
+  <div class="modal-caixa">
+    <h3>Definicoes</h3>
+    <label>Perfil de modelo<br>
+      <select id="cfg-perfil-modelo"></select>
+    </label>
+
+    <div class="stats-painel">
+      <div class="stats-linha"><strong>CPU:</strong> <span id="stat-cpu">--</span></div>
+      <div class="stats-linha"><strong>Uso CPU:</strong> <span id="stat-cpu-uso">--</span></div>
+      <div class="stats-linha"><strong>RAM:</strong> <span id="stat-ram">--</span></div>
+      <div class="stats-linha"><strong>GPU:</strong> <span id="stat-gpu">--</span></div>
+      <div class="stats-linha"><strong>VRAM:</strong> <span id="stat-vram">--</span></div>
+      <div class="stats-linha"><strong>Atualizado:</strong> <span id="stat-ts">--</span></div>
+    </div>
+
+    <div class="modal-botoes">
+      <button type="button" id="cfg-fechar" class="btn-topbar">FECHAR</button>
+      <button type="button" id="cfg-guardar" class="btn-topbar destaque">GUARDAR</button>
     </div>
   </div>
 </div>

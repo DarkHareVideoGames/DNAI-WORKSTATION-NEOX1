@@ -22,7 +22,9 @@ import yaml
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.types import Tool
-from openai import OpenAI
+from openai import BadRequestError, OpenAI
+
+from core.lm_studio import garantir_modelo_ativo
 
 # Raiz do projeto = pasta pai deste ficheiro (core/), calculada a partir do
 # caminho absoluto do próprio módulo — o mesmo truque já usado no
@@ -38,6 +40,44 @@ _CONFIG_PATH = os.path.join(_PROJECT_ROOT, "config", "config.yaml")
 #   memory:
 #     max_history_messages: 20
 DEFAULT_MAX_HISTORY_MESSAGES = 20
+
+
+def _erro_modelo_descarregado(exc: Exception) -> bool:
+    """Deteta erro típico do LM Studio quando o modelo foi descarregado."""
+    msg = str(exc).lower()
+    return "model unloaded" in msg or "modelo" in msg and "descarreg" in msg
+
+
+def _chat_create_resiliente(
+    client: OpenAI,
+    base_url: str,
+    model_name: str,
+    messages: list[dict[str, Any]],
+    tools: list[dict[str, Any]],
+    kwargs_extra: dict[str, Any],
+):
+    """Executa chat completion e faz uma tentativa extra se o modelo descarregar."""
+    try:
+        return client.chat.completions.create(
+            model=model_name,
+            messages=messages,
+            tools=tools,
+            **kwargs_extra,
+        )
+    except BadRequestError as exc:
+        if not _erro_modelo_descarregado(exc):
+            raise
+        ok, info = garantir_modelo_ativo(base_url, model_name)
+        if not ok:
+            raise RuntimeError(
+                f"falha ao recarregar modelo '{model_name}': {info}"
+            ) from exc
+        return client.chat.completions.create(
+            model=model_name,
+            messages=messages,
+            tools=tools,
+            **kwargs_extra,
+        )
 
 
 def _mcp_tool_to_local_model_tool(tool: Tool) -> dict[str, Any]:
@@ -69,6 +109,7 @@ async def _run_async(
     user_message: str,
     history: list[dict[str, Any]],
     regras_projeto: str | None = None,
+    model_override: str | None = None,
 ) -> tuple[str, list[dict[str, Any]]]:
     with open(_CONFIG_PATH, "r") as f:
         config = yaml.safe_load(f)
@@ -77,7 +118,7 @@ async def _run_async(
     base_url = config["api"]["base_url"]
     api_key = config["api"]["api_key"]
 
-    model_name = config["model"]["name"]
+    model_name = str(model_override or config["model"]["name"])
     # Temperatura opcional (model.temperature no config.yaml). Valores baixos
     # (ex.: 0.3) tornam o modelo mais deterministico — importante para a
     # memoria entre turnos em modelos locais pequenos.
@@ -130,9 +171,13 @@ async def _run_async(
             kwargs_extra: dict[str, Any] = (
                 {"temperature": temperatura} if temperatura is not None else {}
             )
-            response = client.chat.completions.create(
-                model=model_name, messages=messages, tools=local_model_tools,
-                **kwargs_extra,
+            response = _chat_create_resiliente(
+                client=client,
+                base_url=base_url,
+                model_name=model_name,
+                messages=messages,
+                tools=local_model_tools,
+                kwargs_extra=kwargs_extra,
             )
             assistant_message = response.choices[0].message
             # Adiciona a mensagem do assistente, mantendo tool_calls se existirem
@@ -181,9 +226,13 @@ async def _run_async(
 
             # Segunda chamada: dá ao modelo o resultado real da ferramenta para
             # produzir a resposta final em linguagem natural ("verificar resultado").
-            final_response = client.chat.completions.create(
-                model=model_name, messages=messages, tools=local_model_tools,
-                **kwargs_extra,
+            final_response = _chat_create_resiliente(
+                client=client,
+                base_url=base_url,
+                model_name=model_name,
+                messages=messages,
+                tools=local_model_tools,
+                kwargs_extra=kwargs_extra,
             )
             final_message = final_response.choices[0].message
             messages.append(final_message.model_dump(exclude_none=True))
@@ -196,6 +245,7 @@ def run(
     user_message: str,
     history: list[dict[str, Any]] | None = None,
     regras_projeto: str | None = None,
+    model_override: str | None = None,
 ) -> tuple[str, list[dict[str, Any]]]:
     """Ponto de entrada síncrono usado por test_smoke.py e pelas interfaces.
 
@@ -207,7 +257,14 @@ def run(
     """
     history = history or []
     try:
-        return asyncio.run(_run_async(user_message, history, regras_projeto))
+        return asyncio.run(
+            _run_async(
+                user_message,
+                history,
+                regras_projeto,
+                model_override,
+            )
+        )
     except Exception as e:
         # Captura erros gerais de execução do run() (ex: falha ao iniciar o evento)
         import traceback

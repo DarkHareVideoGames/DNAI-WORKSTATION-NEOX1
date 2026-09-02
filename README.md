@@ -40,7 +40,7 @@ DNAI WORKSTATION NEO X1/
 │   └── lm_studio.py         # Health check + arranque automático do LM Studio
 ├── interfaces/
 │   └── cli_chat.py          # Interface de chat CLI
-├── run.ps1                  # Lançador (PowerShell)
+├── Start.ps1                # Lançador unico (PowerShell)
 └── requirements.txt         # Dependências Python
 ```
 
@@ -78,9 +78,14 @@ DNAI WORKSTATION NEO X1/
 
 ## Uso
 
-Opção 1 — lançador PowerShell:
+Opção 1 — lançador PowerShell (web por defeito):
 ```powershell
-.\run.ps1
+.\Start.ps1
+```
+
+Para arrancar a interface CLI:
+```powershell
+.\Start.ps1 -Mode cli
 ```
 
 Opção 2 — direto:

@@ -40,6 +40,7 @@ def inicializar() -> None:
             CREATE TABLE IF NOT EXISTS conversas (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 projeto TEXT NOT NULL DEFAULT 'geral',
+                agente_id TEXT NOT NULL DEFAULT 'neo-x1',
                 titulo TEXT NOT NULL DEFAULT 'Nova conversa',
                 criada_em TEXT NOT NULL,
                 atualizada_em TEXT NOT NULL
@@ -60,6 +61,15 @@ def inicializar() -> None:
             """
         )
 
+        # Migracao simples para bases existentes sem a coluna agente_id.
+        colunas = conn.execute("PRAGMA table_info(conversas)").fetchall()
+        nomes_colunas = {str(c[1]) for c in colunas}
+        if "agente_id" not in nomes_colunas:
+            conn.execute(
+                "ALTER TABLE conversas "
+                "ADD COLUMN agente_id TEXT NOT NULL DEFAULT 'neo-x1'"
+            )
+
 
 def _linha_para_dict(linha: sqlite3.Row) -> dict:
     return dict(linha)
@@ -67,32 +77,51 @@ def _linha_para_dict(linha: sqlite3.Row) -> dict:
 
 # ---------------------------------------------------------------- conversas
 
-def criar_conversa(projeto: str = "geral", titulo: str = "Nova conversa") -> int:
+def criar_conversa(
+    projeto: str = "geral",
+    titulo: str = "Nova conversa",
+    agente_id: str = "neo-x1",
+) -> int:
     """Cria uma conversa e devolve o seu id."""
     inicializar()
     agora = _agora()
     with _ligar() as conn:
         cursor = conn.execute(
-            "INSERT INTO conversas (projeto, titulo, criada_em, atualizada_em) "
-            "VALUES (?, ?, ?, ?)",
-            (projeto, titulo, agora, agora),
+            "INSERT INTO conversas (projeto, agente_id, titulo, criada_em, atualizada_em) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (projeto, agente_id, titulo, agora, agora),
         )
         return int(cursor.lastrowid)
 
 
-def listar_conversas(projeto: str | None = None) -> list[dict]:
+def listar_conversas(
+    projeto: str | None = None,
+    agente_id: str | None = None,
+) -> list[dict]:
     """Lista conversas (todas, ou as de um projeto), mais recentes primeiro."""
     inicializar()
     with _ligar() as conn:
-        if projeto is None:
+        if projeto is None and agente_id is None:
             linhas = conn.execute(
                 "SELECT * FROM conversas ORDER BY atualizada_em DESC, id DESC"
             ).fetchall()
-        else:
+        elif projeto is not None and agente_id is None:
             linhas = conn.execute(
                 "SELECT * FROM conversas WHERE projeto = ? "
                 "ORDER BY atualizada_em DESC, id DESC",
                 (projeto,),
+            ).fetchall()
+        elif projeto is None and agente_id is not None:
+            linhas = conn.execute(
+                "SELECT * FROM conversas WHERE agente_id = ? "
+                "ORDER BY atualizada_em DESC, id DESC",
+                (agente_id,),
+            ).fetchall()
+        else:
+            linhas = conn.execute(
+                "SELECT * FROM conversas WHERE projeto = ? AND agente_id = ? "
+                "ORDER BY atualizada_em DESC, id DESC",
+                (projeto, agente_id),
             ).fetchall()
         return [_linha_para_dict(l) for l in linhas]
 
@@ -128,36 +157,50 @@ def apagar_conversa(conversa_id: int) -> bool:
 
 # ---------------------------------------------------------------- mensagens
 
-def guardar_historico(conversa_id: int, historico: list[dict]) -> None:
+def guardar_historico(conversa_id: int, historico: list[dict]) -> bool:
     """Substitui as mensagens guardadas da conversa pelo histórico completo.
 
     `historico` é o formato devolvido por `orchestrator.run()`:
     dicts com role/content e, opcionalmente, tool_call_id/tool_calls.
     Mensagens de sistema são ignoradas (a persona é reinjetada a cada turno).
+    Devolve True se gravou com sucesso; False se a conversa já não existir.
     """
     inicializar()
     agora = _agora()
     with _ligar() as conn:
-        conn.execute("DELETE FROM mensagens WHERE conversa_id = ?", (conversa_id,))
-        for msg in historico:
-            role = msg.get("role")
-            if role is None or role == "system":
-                continue
+        try:
+            existe = conn.execute(
+                "SELECT 1 FROM conversas WHERE id = ?",
+                (conversa_id,),
+            ).fetchone()
+            if not existe:
+                return False
+
+            conn.execute("DELETE FROM mensagens WHERE conversa_id = ?", (conversa_id,))
+            for msg in historico:
+                role = msg.get("role")
+                if role is None or role == "system":
+                    continue
+                conn.execute(
+                    "INSERT INTO mensagens (conversa_id, role, content, tool_call_id, criada_em) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    (
+                        conversa_id,
+                        role,
+                        str(msg.get("content") or ""),
+                        msg.get("tool_call_id"),
+                        agora,
+                    ),
+                )
             conn.execute(
-                "INSERT INTO mensagens (conversa_id, role, content, tool_call_id, criada_em) "
-                "VALUES (?, ?, ?, ?, ?)",
-                (
-                    conversa_id,
-                    role,
-                    str(msg.get("content") or ""),
-                    msg.get("tool_call_id"),
-                    agora,
-                ),
+                "UPDATE conversas SET atualizada_em = ? WHERE id = ?",
+                (agora, conversa_id),
             )
-        conn.execute(
-            "UPDATE conversas SET atualizada_em = ? WHERE id = ?",
-            (agora, conversa_id),
-        )
+        except sqlite3.IntegrityError:
+            # Corrida entre requests (ex.: conversa apagada durante o turno).
+            # Não deve derrubar o endpoint de chat.
+            return False
+    return True
 
 
 def carregar_historico(conversa_id: int) -> list[dict]:

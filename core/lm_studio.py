@@ -161,3 +161,30 @@ def modelos_disponiveis(base_url: str) -> list[str]:
         return [m["id"] for m in dados.get("data", [])]
     except Exception:
         return []
+
+
+def garantir_modelo_ativo(base_url: str, modelo: str, timeout_s: int = 45) -> tuple[bool, str]:
+    """Garante que um modelo especifico está ativo no servidor LM Studio.
+
+    Tenta carregar via `lms load <modelo> -y` e espera até surgir em /models.
+    Devolve (ok, mensagem_erro_ou_info).
+    """
+    modelo = str(modelo or "").strip()
+    if not modelo:
+        return False, "modelo vazio"
+
+    atuais = modelos_disponiveis(base_url)
+    if modelo in atuais:
+        return True, ""
+
+    ok, erro = _correr_lms(["load", modelo, "-y"])
+    if not ok:
+        return False, erro
+
+    inicio = time.monotonic()
+    while time.monotonic() - inicio < timeout_s:
+        if modelo in modelos_disponiveis(base_url):
+            return True, ""
+        time.sleep(1)
+
+    return False, f"modelo '{modelo}' nao apareceu em /models apos {timeout_s}s"
