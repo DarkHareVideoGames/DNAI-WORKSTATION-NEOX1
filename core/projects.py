@@ -132,3 +132,22 @@ def pasta_ficheiros(nome_ou_slug: str) -> str:
     pasta = os.path.join(PROJETOS_DIR, slug, "ficheiros")
     os.makedirs(pasta, exist_ok=True)
     return pasta
+
+
+def pasta_projeto(nome_ou_slug: str) -> str:
+    """Devolve (e cria, se necessário) a pasta base do projeto."""
+    slug = _slug(nome_ou_slug)
+    pasta = os.path.join(PROJETOS_DIR, slug)
+    os.makedirs(pasta, exist_ok=True)
+    return pasta
+
+
+def guardar_metadata_render(nome_ou_slug: str, nome_ficheiro: str, dados: dict[str, Any]) -> str:
+    """Guarda metadata de render numa subpasta dedicada do projeto."""
+    base = pasta_projeto(nome_ou_slug)
+    pasta_meta = os.path.join(base, "renders_metadata")
+    os.makedirs(pasta_meta, exist_ok=True)
+    caminho = os.path.join(pasta_meta, nome_ficheiro)
+    with open(caminho, "w", encoding="utf-8") as f:
+        yaml.safe_dump(dados, f, allow_unicode=True, sort_keys=False)
+    return caminho

@@ -1,0 +1,255 @@
+{
+  "9": {
+    "inputs": {
+      "filename_prefix": "z-image-turbo",
+      "images": [
+        "70:43",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Salvar Imagem"
+    }
+  },
+  "56": {
+    "inputs": {
+      "images": [
+        "57",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Imagem de Pré-visualização"
+    }
+  },
+  "57": {
+    "inputs": {
+      "low_threshold": 0.06,
+      "high_threshold": 0.24,
+      "image": [
+        "58",
+        0
+      ]
+    },
+    "class_type": "Canny",
+    "_meta": {
+      "title": "Canny"
+    }
+  },
+  "58": {
+    "inputs": {
+      "image": "flores-MASK_outlines.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Carregar Imagem"
+    }
+  },
+  "74": {
+    "inputs": {
+      "images": [
+        "9",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Imagem de Pré-visualização"
+    }
+  },
+  "81": {
+    "inputs": {
+      "image1": [
+        "74",
+        0
+      ],
+      "image2": [
+        "58",
+        0
+      ]
+    },
+    "class_type": "PixaromaCompare",
+    "_meta": {
+      "title": "Image Compare Pixaroma"
+    }
+  },
+  "70:39": {
+    "inputs": {
+      "clip_name": "qwen_3_4b_fp8_mixed.safetensors",
+      "type": "lumina2",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Carregar CLIP"
+    }
+  },
+  "70:46": {
+    "inputs": {
+      "unet_name": "z-image\\z-image-turbo_fp8_scaled_e4m3fn_KJ.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Carregar Modelo de Difusão"
+    }
+  },
+  "70:40": {
+    "inputs": {
+      "vae_name": "ae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Carregar VAE"
+    }
+  },
+  "70:64": {
+    "inputs": {
+      "name": "Z-Image-Turbo-Fun-Controlnet-Union-2.1-lite-2601-8steps.safetensors"
+    },
+    "class_type": "ModelPatchLoader",
+    "_meta": {
+      "title": "ModelPatchLoader"
+    }
+  },
+  "70:43": {
+    "inputs": {
+      "samples": [
+        "70:44",
+        0
+      ],
+      "vae": [
+        "70:40",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decodificar"
+    }
+  },
+  "70:47": {
+    "inputs": {
+      "shift": 3,
+      "model": [
+        "70:60",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingAuraFlow",
+    "_meta": {
+      "title": "ModelSamplingAuraFlow"
+    }
+  },
+  "70:44": {
+    "inputs": {
+      "seed": 909883650935733,
+      "steps": 8,
+      "cfg": 1,
+      "sampler_name": "res_multistep",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "70:47",
+        0
+      ],
+      "positive": [
+        "70:45",
+        0
+      ],
+      "negative": [
+        "70:42",
+        0
+      ],
+      "latent_image": [
+        "70:41",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "70:42": {
+    "inputs": {
+      "conditioning": [
+        "70:45",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": {
+      "title": "CondicionamentoZerar"
+    }
+  },
+  "70:60": {
+    "inputs": {
+      "strength": 1,
+      "model": [
+        "70:46",
+        0
+      ],
+      "model_patch": [
+        "70:64",
+        0
+      ],
+      "vae": [
+        "70:40",
+        0
+      ],
+      "image": [
+        "56",
+        0
+      ]
+    },
+    "class_type": "QwenImageDiffsynthControlnet",
+    "_meta": {
+      "title": "QwenImageDiffsynthControlnet"
+    }
+  },
+  "70:41": {
+    "inputs": {
+      "width": [
+        "70:69",
+        0
+      ],
+      "height": [
+        "70:69",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptySD3LatentImage",
+    "_meta": {
+      "title": "EmptySD3LatentImage"
+    }
+  },
+  "70:45": {
+    "inputs": {
+      "text": "A dramatic, large-scale architectural visualization of an imposing building facade. The entire structure is heavily charred and covered in deep, smoky charcoal grey tones. Volumetric fire and thick, ethereal smoke engulf parts of the scene, casting intense orange and red highlights against the dark, blackened concrete. Crucially, select elements of the original architecture—such as intricate windows frames, cornices, or stone carvings—remain partially intact, providing a stark contrast to the decay. Cinematic lighting, extreme detail, photorealistic, gritty texture, ideal for video mapping projection",
+      "clip": [
+        "70:39",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Codificação de Texto CLIP (Prompt)"
+    }
+  },
+  "70:69": {
+    "inputs": {
+      "image": [
+        "56",
+        0
+      ]
+    },
+    "class_type": "GetImageSize",
+    "_meta": {
+      "title": "Obter Tamanho da Imagem"
+    }
+  }
+}

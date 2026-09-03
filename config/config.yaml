@@ -22,6 +22,26 @@ api:
   base_url: "http://localhost:1234/v1"
   api_key: "lm-studio"
 
+comfyui:
+  enabled: true
+  base_url: "http://127.0.0.1:8188"
+  root_dir: "C:/AI/ComfyUI-Easy-Install/ComfyUI-Easy-Install/ComfyUI"
+  workflow_template: "config/workflows/LINE_COUNTORS_TO_IMAGE.api.json"
+  final_output_node: "FinalShot"
+  request_timeout_seconds: 180
+  poll_interval_seconds: 1.5
+  max_wait_seconds_per_shot: 600
+  max_retries_per_shot: 2
+  line_lock:
+    mode: "strict"
+    min_coverage: 0.72
+    max_spill: 0.35
+    min_score: 0.45
+    edge_threshold: 35
+    canny_low_threshold: 0.06
+    canny_high_threshold: 0.24
+    control_strength: 1.0
+
 # Interface web local (Milestone 3). Apenas acessível em localhost.
 interface:
   host: 127.0.0.1

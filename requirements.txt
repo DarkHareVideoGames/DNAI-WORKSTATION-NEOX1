@@ -36,3 +36,5 @@ typing-inspection==0.4.4
 typing_extensions==4.16.0
 uvicorn==0.52.4
 openai>=1.0.0
+Pillow>=10.0.0
+reportlab>=4.0.0

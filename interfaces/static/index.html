@@ -39,10 +39,6 @@
         <button id="btn-ficheiros" class="btn-topbar">FICHEIROS &#9662;</button>
         <div id="menu-ficheiros" class="dropdown-menu oculto">
           <div id="lista-ficheiros" class="lista-ficheiros">Sem ficheiros.</div>
-          <label class="item-upload">
-            + Carregar ficheiro
-            <input type="file" id="input-upload" hidden>
-          </label>
         </div>
       </div>
       <button id="btn-definicoes" class="btn-topbar" title="Definições (em breve)">DEFINIÇÕES</button>
@@ -76,7 +72,9 @@
     <main id="chat">
       <div id="mensagens">
         <div class="vazia" id="chat-vazio">
-          <img src="/assets/neox1-logo.svg" alt="" class="vazio-logo">
+          <div id="agente-selo" class="agente-selo" aria-hidden="true">
+            <img id="agente-selo-img" src="/assets/neox1-logo.png" alt="">
+          </div>
           <p>Escolha ou crie uma conversa para começar.</p>
         </div>
       </div>
@@ -84,12 +82,29 @@
         <input type="text" id="entrada" placeholder="Escreva a sua mensagem..." autocomplete="off" disabled>
         <button type="submit" id="btn-enviar" disabled>ENVIAR</button>
       </form>
+      <div id="ref-fachada-box" class="ref-fachada-box" aria-live="polite">
+        <label id="btn-ref-upload" class="btn-ref-upload" for="input-referencia-fachada">+ Imagem de referencia</label>
+        <input type="file" id="input-referencia-fachada" accept=".png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff,.exr" hidden>
+        <span id="ref-fachada-estado" class="ref-fachada-estado">A validar referencias...</span>
+      </div>
       <div id="pipeline-opcoes" class="pipeline-opcoes">
-        <label>
-          <input type="checkbox" id="auto-pipeline">
-          Auto-pipeline (Story -> Storyboard -> Video)
-        </label>
-        <button type="button" id="btn-passar-proximo" class="btn-pipeline">Passar ao próximo agente</button>
+        <div class="pipeline-lado-esq">
+          <button type="button" id="btn-comfyui-render" class="btn-pipeline btn-comfyui btn-storyboard-tool" title="Gerar storyboard com workflow ComfyUI">
+            <span class="storyboard-glyph" aria-hidden="true"></span>
+            <span>Gerar Storyboard</span>
+          </button>
+          <button type="button" id="btn-storyboard-pdf" class="btn-pipeline btn-storyboard-pdf oculto" title="Exportar PDF visual com imagens aprovadas">
+            <span class="storyboard-glyph" aria-hidden="true"></span>
+            <span>PDF Visual</span>
+          </button>
+        </div>
+        <div class="pipeline-acoes">
+          <label class="pipeline-auto-label">
+            <input type="checkbox" id="auto-pipeline">
+            Auto-pipeline (Story -> Storyboard -> Video)
+          </label>
+          <button type="button" id="btn-passar-proximo" class="btn-pipeline btn-pipeline-principal">Enviar ao próximo agente</button>
+        </div>
       </div>
     </main>
 
@@ -142,6 +157,22 @@
     <div class="modal-botoes">
       <button type="button" id="cfg-fechar" class="btn-topbar">FECHAR</button>
       <button type="button" id="cfg-guardar" class="btn-topbar destaque">GUARDAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: preview imagem referencia -->
+<div id="modal-preview-imagem" class="modal modal-preview-imagem oculto" aria-hidden="true">
+  <div class="preview-imagem-caixa" role="dialog" aria-modal="true" aria-label="Preview da imagem de referencia">
+    <button type="button" id="preview-imagem-fechar" class="preview-imagem-fechar" aria-label="Fechar preview">×</button>
+    <img id="preview-imagem-src" class="preview-imagem-src" alt="Preview da imagem de referencia">
+    <div class="preview-imagem-meta">
+      <div id="preview-imagem-nome" class="preview-imagem-nome"></div>
+      <div id="preview-imagem-resolucao" class="preview-imagem-resolucao"></div>
+      <div id="preview-imagem-acoes" class="preview-imagem-acoes">
+        <a id="preview-imagem-transferir" class="btn-ficheiro-acao" href="#" target="_blank" rel="noopener">Transferir</a>
+        <button type="button" id="preview-imagem-apagar" class="btn-ficheiro-acao perigo">Apagar</button>
+      </div>
     </div>
   </div>
 </div>

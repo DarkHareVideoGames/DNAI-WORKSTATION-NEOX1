@@ -109,11 +109,29 @@ Para verificar ligações (LM Studio, MCP, modelo) sem abrir o chat:
 |---|---|---|
 | `model.name` | — | Modelo a usar no LM Studio |
 | `api.base_url` | — | Endpoint OpenAI-compatible do LM Studio |
+| `comfyui.enabled` | `true/false` | Ativa integração de render batch no Storyboard Maker |
+| `comfyui.base_url` | — | URL do servidor ComfyUI (ex.: `http://127.0.0.1:8188`) |
+| `comfyui.root_dir` | — | Pasta raiz do ComfyUI (para input/output locais) |
+| `comfyui.workflow_template` | — | Template API JSON do workflow usado no batch |
+| `comfyui.line_lock.*` | — | Parâmetros de restrição aos contornos da imagem de referência |
 | `persona.system_prompt` | — | Identidade injetada como system prompt |
 | `lm_studio.auto_start` | `true/false` | Arrancar o servidor se estiver desligado |
 | `lm_studio.startup_timeout_seconds` | — | Tempo máximo de espera após arranque |
 | `lm_studio.load_model_on_start` | `true/false` | Carregar o modelo automaticamente |
 | `memory.max_history_messages` | — | Limite de mensagens no histórico |
+
+## Render Batch ComfyUI (Storyboard)
+
+1. Selecione o agente Storyboard Maker.
+2. Gere um storyboard em JSON com `shots`.
+3. Anexe a imagem de referência (outline/AO recomendado).
+4. Clique em **Gerar Storyboard no ComfyUI**.
+5. Acompanhe o progresso no chat até ao estado final.
+
+Notas:
+- O sistema usa validação de aderência a contornos (`line_lock`) e pode fazer retries por shot.
+- Apenas imagens aprovadas são mantidas na pasta do projeto.
+- Metadata de render é guardada em `data/projetos/<slug>/renders_metadata/`.
 
 ## Contribuições
 
